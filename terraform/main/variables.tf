@@ -29,7 +29,7 @@ variable "enable_lb" {
 variable "cache_enabled" {
   description = "Lab 2, task 5: switch the Redis cache for GET /posts on/off (new revision)."
   type        = bool
-  default     = false
+  default     = true
 }
 
 variable "cache_ttl_seconds" {

@@ -62,5 +62,8 @@ resource "azurerm_container_app" "redis" {
 }
 
 locals {
-  redis_url = "redis://:${random_password.redis.result}@${azurerm_container_app.redis.ingress[0].fqdn}:6379/0"
+  # Host is the app name, not the ingress FQDN: in an environment that is not
+  # internal-only, the "<app>.internal.<domain>" name of a TCP app times out,
+  # while the short app name resolves inside the environment and works.
+  redis_url = "redis://:${random_password.redis.result}@${azurerm_container_app.redis.name}:6379/0"
 }
