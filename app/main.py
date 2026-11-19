@@ -46,5 +46,5 @@ def health(response: Response):
             db.execute(text("SELECT 1"))
     except SQLAlchemyError:
         response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
-        return {"status": "error", "database": "unreachable"}
-    return {"status": "ok", "database": "ok"}
+        return {"status": "error", "database": "unreachable", "version": APP_VERSION}
+    return {"status": "ok", "database": "ok", "version": APP_VERSION}
