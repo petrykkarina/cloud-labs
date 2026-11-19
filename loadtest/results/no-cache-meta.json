@@ -1,0 +1,2 @@
+{"label": "no-cache", "base_url": "https://ca-blog-api.bluemushroom-488bf397.polandcentral.azurecontainerapps.io", "vus": 25, "ramp": "3m", "steady": "5m",
+ "down": "2m", "think_time_s": 1, "started_at": "2026-11-19T03:47:37Z", "finished_at": "2026-11-19T03:57:38Z"}

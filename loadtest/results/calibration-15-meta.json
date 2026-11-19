@@ -1,0 +1,2 @@
+{"label": "calibration-15", "base_url": "https://ca-blog-api.bluemushroom-488bf397.polandcentral.azurecontainerapps.io", "vus": 15, "ramp": "1m", "steady": "2m",
+ "down": "30s", "think_time_s": 1, "started_at": "2026-11-19T03:35:32Z", "finished_at": "2026-11-19T03:39:04Z"}
