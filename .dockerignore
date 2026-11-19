@@ -1,0 +1,12 @@
+# Only requirements.txt and app/ are needed inside the image.
+.git
+.github
+.local
+.env
+.venv
+**/__pycache__
+**/*.pyc
+terraform
+docs
+*.md
+compose.yaml
