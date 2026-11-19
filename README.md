@@ -30,6 +30,8 @@ REST API блогу (автори і пости) на **Python 3.12 + FastAPI + 
 | POST | `/posts` | створити пост |
 | GET | `/posts?limit=&offset=&author_id=` | список постів з пагінацією (новіші першими) |
 | GET / PUT / DELETE | `/posts/{id}` | пост з автором, оновити, видалити |
+| GET | `/cache/stats` | лічильники кешу: hits, misses, hit ratio |
+| POST | `/cache/stats/reset` | обнулити лічильники кешу |
 
 ## Архітектура
 
@@ -64,8 +66,9 @@ app/                      код застосунку
   models.py               таблиці authors, posts
   schemas.py              Pydantic-схеми запитів і відповідей
   routers/                /authors і /posts
+  cache.py                cache-aside на Redis для GET /posts
 Dockerfile                образ: python:3.12.16-slim-bookworm, не root
-compose.yaml              локальний запуск: app + postgres:17.12 з volume
+compose.yaml              локальний запуск: app + postgres:17.12 + redis:7.4
 requirements.txt          зафіксовані версії залежностей
 .env.example              шаблон локальних змінних (.env у .gitignore)
 terraform/
@@ -74,9 +77,16 @@ terraform/
   main/                   уся інфраструктура застосунку, state в Azure Storage
 .github/workflows/
   deploy.yml              CD: push у main → образ у ACR → Container App
+loadtest/                 k6: script.js, run.sh (одна команда), results/
 docs/
   lab1/DEFENSE.md         відповіді на теоретичні питання Lab 1
   lab1/decisions.md       рішення, альтернативи, вартість
+  AUTOSCALING.md          Lab 2: правило масштабування і хронологія
+  LOADTEST.md             Lab 2: сценарій k6 і звіт
+  ALERTS.md               Lab 2: алерт на email
+  CACHE.md                Lab 2: Redis cache-aside, порівняння
+  lab2/DEFENSE.md         відповіді на теоретичні питання Lab 2
+  lab2/img/               скріни дашборда і листів
 ```
 
 ## Локальний запуск
@@ -172,7 +182,8 @@ Terraform нею не керує, і її можна видалити вручн
 
 ## Вартість (без Application Gateway)
 
-Близько **$0.33 на добу**: ACR Basic ~$0.17, Container App ~$0.14, DNS zone ~$0.02.
+Близько **$0.55 на добу**: ACR Basic ~$0.17, Container App API ~$0.14, Redis
+Container App ~$0.20 (Lab 2), DNS zone ~$0.02.
 PostgreSQL B1ms покриває free tier Azure for Students. Деталі в
 [docs/lab1/decisions.md](docs/lab1/decisions.md).
 
@@ -180,3 +191,9 @@ PostgreSQL B1ms покриває free tier Azure for Students. Деталі в
 
 * [Lab 1: відповіді до захисту](docs/lab1/DEFENSE.md)
 * [Lab 1: рішення і вартість](docs/lab1/decisions.md)
+* [Lab 2: відповіді до захисту](docs/lab2/DEFENSE.md)
+* [Lab 2: автоматичне масштабування](docs/AUTOSCALING.md)
+* [Lab 2: навантажувальне тестування](docs/LOADTEST.md)
+* [Lab 2: алерт](docs/ALERTS.md)
+* [Lab 2: кешування](docs/CACHE.md)
+* Lab 2: дашборд `dash-blog` в Azure Portal ([`terraform/main/dashboard.tf`](terraform/main/dashboard.tf))
