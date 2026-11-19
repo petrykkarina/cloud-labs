@@ -1,0 +1,92 @@
+# Continuous deployment: push to main -> build image -> push to ACR -> update Container App.
+#
+# No passwords or keys are stored in GitHub. azure/login asks GitHub for a
+# short-lived OIDC token and exchanges it for an Azure token. Azure accepts it
+# only because of the federated credential in terraform/bootstrap/github_oidc.tf
+# (repo petrykkarina/cloud-labs, branch main).
+name: deploy
+
+on:
+  push:
+    branches: [main]
+    # Docs or Terraform changes do not rebuild the app.
+    paths:
+      - "app/**"
+      - "Dockerfile"
+      - "requirements.txt"
+      - ".github/workflows/deploy.yml"
+  workflow_dispatch: # manual "Run workflow" button
+
+permissions:
+  id-token: write # allow the job to request the OIDC token
+  contents: read
+
+# Two quick pushes never deploy in parallel; the second waits for the first.
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+env:
+  # IDs, not secrets: they say WHO we log in as, not HOW to prove it.
+  # Values come from `terraform output` in terraform/bootstrap and terraform/main.
+  AZURE_CLIENT_ID: 8b1ef704-e2e3-414d-a27e-b6b2202eb800
+  AZURE_TENANT_ID: 836f831b-e92d-40f1-ab66-1710f43e1767
+  AZURE_SUBSCRIPTION_ID: e643fd7f-fdad-4009-a8f7-83c67af79345
+  ACR_NAME: acrblogi60z12
+  RESOURCE_GROUP: rg-blog
+  CONTAINER_APP: ca-blog-api
+  IMAGE_NAME: blog-api
+
+jobs:
+  deploy:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Log in to Azure (OIDC, no secrets)
+        uses: azure/login@v3
+        with:
+          client-id: ${{ env.AZURE_CLIENT_ID }}
+          tenant-id: ${{ env.AZURE_TENANT_ID }}
+          subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Log in to the container registry
+        # Uses the Azure token from the previous step (role AcrPush), no registry password.
+        run: az acr login --name "$ACR_NAME"
+
+      - name: Build image (tag = commit hash)
+        run: |
+          IMAGE="$ACR_NAME.azurecr.io/$IMAGE_NAME:${{ github.sha }}"
+          echo "IMAGE=$IMAGE" >> "$GITHUB_ENV"
+          docker build --build-arg GIT_SHA=${{ github.sha }} -t "$IMAGE" .
+
+      - name: Push image to ACR
+        run: docker push "$IMAGE"
+
+      - name: Deploy new image to Container App
+        # Creates a new revision; in Single revision mode traffic switches to it
+        # once it is healthy (role: Container Apps Contributor on this app only).
+        run: |
+          az containerapp update \
+            --name "$CONTAINER_APP" \
+            --resource-group "$RESOURCE_GROUP" \
+            --image "$IMAGE" \
+            --output none
+
+      - name: Wait until the new revision is running
+        run: |
+          for i in $(seq 1 30); do
+            read -r LATEST READY <<< "$(az containerapp show -n "$CONTAINER_APP" -g "$RESOURCE_GROUP" \
+              --query '[properties.latestRevisionName, properties.latestReadyRevisionName]' -o tsv | tr '\n' ' ')"
+            echo "latest=$LATEST ready=$READY"
+            if [ -n "$LATEST" ] && [ "$LATEST" = "$READY" ]; then
+              echo "Deployed ${{ github.sha }}"
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "New revision did not become ready in time" >&2
+          exit 1
