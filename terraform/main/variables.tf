@@ -26,6 +26,23 @@ variable "enable_lb" {
   default     = false
 }
 
+variable "cache_enabled" {
+  description = "Lab 2, task 5: switch the Redis cache for GET /posts on/off (new revision)."
+  type        = bool
+  default     = false
+}
+
+variable "cache_ttl_seconds" {
+  description = "How long a cached page of posts lives in Redis."
+  type        = number
+  default     = 30
+}
+
+variable "alert_email" {
+  description = "Where Azure Monitor alerts are sent (kept in terraform.tfvars)."
+  type        = string
+}
+
 variable "github_identity_name" {
   description = "Managed identity created by terraform/bootstrap for GitHub Actions."
   type        = string

@@ -47,6 +47,11 @@ resource "azurerm_container_app" "api" {
     value = local.database_url
   }
 
+  secret {
+    name  = "redis-url"
+    value = local.redis_url
+  }
+
   ingress {
     # "external" = reachable from outside the environment. With enable_lb = true
     # the environment itself is internal, so this means "reachable from the VNet"
@@ -62,8 +67,31 @@ resource "azurerm_container_app" "api" {
   }
 
   template {
+    # Lab 2, task 1: horizontal autoscaling between 1 and 4 replicas.
     min_replicas = 1
-    max_replicas = 1
+    max_replicas = 4
+
+    # How often KEDA checks the scale rule (seconds).
+    polling_interval_in_seconds = 30
+    # KEDA cooldown: wait this long after the last active trigger before
+    # scaling in. Scale-in between N>1 replicas additionally goes through the
+    # Kubernetes HPA 300 s stabilization window. See docs/AUTOSCALING.md.
+    cooldown_period_in_seconds = 300
+
+    # On scale-in / new revision the replica gets SIGTERM and up to 30 s to
+    # finish in-flight requests (uvicorn --timeout-graceful-shutdown 20).
+    termination_grace_period_seconds = 30
+
+    # Add replicas when average CPU across replicas goes above 60% of the
+    # requested 0.25 vCPU. Why 60%: see docs/AUTOSCALING.md.
+    custom_scale_rule {
+      name             = "cpu-60"
+      custom_rule_type = "cpu"
+      metadata = {
+        type  = "Utilization"
+        value = "60"
+      }
+    }
 
     container {
       name = "api"
@@ -77,6 +105,22 @@ resource "azurerm_container_app" "api" {
       env {
         name        = "DATABASE_URL"
         secret_name = "database-url"
+      }
+
+      # Lab 2, task 5: cache-aside for GET /posts.
+      env {
+        name        = "REDIS_URL"
+        secret_name = "redis-url"
+      }
+
+      env {
+        name  = "CACHE_ENABLED"
+        value = tostring(var.cache_enabled)
+      }
+
+      env {
+        name  = "CACHE_TTL_SECONDS"
+        value = tostring(var.cache_ttl_seconds)
       }
     }
   }

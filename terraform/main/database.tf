@@ -58,6 +58,14 @@ resource "azurerm_postgresql_flexible_server" "main" {
   }
 }
 
+# Enhanced metrics (transactions, tuples read, ...) for the database load
+# comparison with and without cache in Lab 2. Free, applied without restart.
+resource "azurerm_postgresql_flexible_server_configuration" "db_activity_metrics" {
+  name      = "metrics.collector_database_activity"
+  server_id = azurerm_postgresql_flexible_server.main.id
+  value     = "on"
+}
+
 resource "azurerm_postgresql_flexible_server_database" "blog" {
   name      = "blog"
   server_id = azurerm_postgresql_flexible_server.main.id
