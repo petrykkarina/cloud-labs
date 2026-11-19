@@ -26,4 +26,7 @@ ENV APP_VERSION=$GIT_SHA
 
 USER 10001
 EXPOSE 8000
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# --no-access-log: the app logs every request itself (JSON with duration).
+# --timeout-graceful-shutdown: on SIGTERM (scale-in, new revision) finish
+#   in-flight requests for up to 20 s before exiting.
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--no-access-log", "--timeout-graceful-shutdown", "20"]

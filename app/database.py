@@ -15,7 +15,17 @@ DATABASE_URL = os.environ["DATABASE_URL"]
 
 # pool_pre_ping checks a connection before using it, so the app survives
 # database restarts without returning errors to the user.
-engine = create_engine(DATABASE_URL, pool_pre_ping=True)
+#
+# Pool size matters when the app scales out: Azure PostgreSQL B1ms allows
+# 50 connections, 15 of them reserved for Azure, so 35 are left for us.
+# 4 replicas x (5 + 2 overflow) = 28 connections at most, safely below 35.
+engine = create_engine(
+    DATABASE_URL,
+    pool_pre_ping=True,
+    pool_size=5,
+    max_overflow=2,
+    pool_timeout=10,
+)
 SessionLocal = sessionmaker(bind=engine, autoflush=False)
 
 
