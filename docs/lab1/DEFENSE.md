@@ -213,7 +213,7 @@ COPY app ./app                    # змінюється часто
 
 ### 24. Як GitHub Actions отримує доступ без ключів? OIDC і trust policy
 
-1. Workflow має `permissions: id-token: write`, тому може попросити GitHub видати **OIDC-токен** (JWT). Токен підписаний GitHub і містить, з якого він репо і гілки: `sub = repo:petrykkarina/cloud-labs:ref:refs/heads/main`.
+1. Workflow має `permissions: id-token: write`, тому може попросити GitHub видати **OIDC-токен** (JWT). Токен підписаний GitHub і містить, з якого він репо і гілки: `sub = repo:petrykkarina@181594313/cloud-labs@1463599628:ref:refs/heads/main`. Числа це ID власника і репо в GitHub: якщо репо видалити і створити заново з тим самим ім'ям, ID буде інший, і старе правило довіри до нього не підійде.
 2. `azure/login` надсилає цей токен в Entra ID.
 3. Entra ID перевіряє його за **federated credential** (`terraform/bootstrap/github_oidc.tf`): чи збігаються issuer `token.actions.githubusercontent.com`, audience `api://AzureADTokenExchange` і subject. Це і є **trust policy**: «довіряти токенам тільки з цього репо і цієї гілки».
 4. Якщо все збігається, Entra видає Azure-токен для identity `id-blog-github` приблизно на годину. Pull request з форку, інша гілка чи інший репо отримають інший `sub`, і їм буде відмовлено.

@@ -21,6 +21,20 @@ variable "github_repository" {
   default     = "petrykkarina/cloud-labs"
 }
 
+# GitHub puts numeric IDs into the OIDC subject: repo:<owner>@<owner_id>/<repo>@<repo_id>:...
+# If the repo is deleted and recreated with the same name it gets a NEW id,
+# so a lookalike repo cannot reuse our trust. Get them with:
+#   gh api repos/petrykkarina/cloud-labs --jq '.owner.id, .id'
+variable "github_owner_id" {
+  type    = number
+  default = 181594313
+}
+
+variable "github_repository_id" {
+  type    = number
+  default = 1463599628
+}
+
 variable "github_branch" {
   description = "Only workflows running on this branch can get an Azure token."
   type        = string
