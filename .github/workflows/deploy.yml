@@ -29,7 +29,7 @@ concurrency:
 env:
   # IDs, not secrets: they say WHO we log in as, not HOW to prove it.
   # Values come from `terraform output` in terraform/bootstrap and terraform/main.
-  AZURE_CLIENT_ID: 8b1ef704-e2e3-414d-a27e-b6b2202eb800
+  AZURE_CLIENT_ID: ede520f1-4e82-4368-8424-8997818c4d5d
   AZURE_TENANT_ID: 836f831b-e92d-40f1-ab66-1710f43e1767
   AZURE_SUBSCRIPTION_ID: e643fd7f-fdad-4009-a8f7-83c67af79345
   ACR_NAME: acrblogi60z12

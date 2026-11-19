@@ -18,7 +18,7 @@ terraform {
   # If bootstrap is recreated, put its tfstate_storage_account_name output here.
   backend "azurerm" {
     resource_group_name  = "rg-blog-bootstrap"
-    storage_account_name = "stblogtfstateq00s5z"
+    storage_account_name = "stblogtfstatet8de0b"
     container_name       = "tfstate"
     key                  = "main.tfstate"
   }
