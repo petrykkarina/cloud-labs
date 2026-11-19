@@ -1,0 +1,3 @@
+# cp terraform.tfvars.example terraform.tfvars   (terraform.tfvars is git-ignored)
+subscription_id = "00000000-0000-0000-0000-000000000000"
+# enable_lb     = true   # task 4 demo only, ~0.25 USD/hour
