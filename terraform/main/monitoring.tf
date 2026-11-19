@@ -26,8 +26,11 @@ resource "azurerm_monitor_action_group" "email" {
   resource_group_name = azurerm_resource_group.main.name
   short_name          = "blogalerts" # max 12 chars, shown in SMS/email subject
 
+  # Azure asks every new email address to confirm itself (OTP from a
+  # "Verify your email" letter, valid 30 min); until then no alert emails are
+  # delivered. A new letter is sent when the action group is saved again.
   email_receiver {
-    name                    = "karina"
+    name                    = "karina-lpnu"
     email_address           = var.alert_email
     use_common_alert_schema = true
   }
